@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#123c32"><title>Digital Dukaan Hisab</title>
+<style>
+:root{--g:#123c32;--bg:#f4f7f5;--line:#e1e9e4;--muted:#68756f;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px system-ui,-apple-system,Segoe UI,sans-serif;color:#17231f}
+header{background:var(--g);color:#fff;padding:20px 17px 24px;border-radius:0 0 22px 22px}header h1{font-size:22px;margin:0 0 4px}header p{margin:0;color:#d6e7df;font-size:13px}
+main{max-width:700px;margin:auto;padding:15px}.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+button,input,select{font:inherit}button{border:0;border-radius:10px;padding:11px 13px;font-weight:650;cursor:pointer}.primary{background:var(--g);color:#fff;width:100%}.soft{background:#e9f4ef;color:var(--g)}.danger{background:#fff0ee;color:var(--red)}
+.panel,.stat{background:#fff;border:1px solid var(--line);border-radius:15px;padding:14px;margin-top:13px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat small{display:block;color:var(--muted);font-size:12px}.stat strong{font-size:21px;display:block;margin-top:4px}.red{color:var(--red)}.green{color:#16734d}
+h2{font-size:16px;margin:0 0 12px}label{font-size:12px;font-weight:650;color:var(--muted);display:block;margin-top:7px}
+input,select{width:100%;padding:11px;border:1px solid #d6dfda;border-radius:10px;background:#fff;margin:5px 0 8px;min-width:0}
+.row{display:flex;gap:8px}.row>*{flex:1}.small{font-size:12px;color:var(--muted);line-height:1.5}.customer{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:9px}.ctop{display:flex;justify-content:space-between;gap:8px}.cname{font-weight:700}.bal{font-weight:750;white-space:nowrap}.actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.actions button{font-size:12px;padding:8px 9px}.toolbar{display:flex;gap:8px}.empty{text-align:center;color:var(--muted);padding:18px 5px;font-size:13px}
+.status{font-size:12px;padding:7px 10px;border-radius:9px;background:#f0f3f1;color:#43524b;margin-top:9px}.status.ok{background:#e8f5ed;color:#17633f}.status.warn{background:#fff4df;color:#825400}
+.hidden{display:none!important}.tabs{display:flex;gap:7px;margin:12px 0}.tabs button{flex:1}.tabs .active{background:var(--g);color:white}.note{font-size:11px;color:var(--muted);line-height:1.5;margin:12px 2px}
+@media print{header,.tabs,#homeView,#settingsView,#expenseForm,#printReport,#runReport,#langBtn{display:none!important}body{background:#fff}.panel{border:0;page-break-inside:avoid}.hidden{display:none!important}}
+</style>
+</head>
+<body>
+<header><div class="top"><div><h1>📒 Digital Dukaan Hisab</h1><p id="tagline">Simple customer khata for your business</p></div><button class="soft" id="langBtn">हिंदी</button></div></header>
+<main>
+<div class="stats">
+<div class="stat"><small id="dueLabel">Total outstanding</small><strong class="red" id="totalDue">₹0</strong></div>
+<div class="stat"><small id="countLabel">Customers</small><strong id="customerCount">0</strong></div>
+<div class="stat"><small id="todaySalesLabel">Today's credit</small><strong id="todaySales">₹0</strong></div>
+<div class="stat"><small id="todayCollectionLabel">Today's collection</small><strong id="todayCollection">₹0</strong></div>
+<div class="stat"><small id="monthSalesLabel">This month's credit</small><strong id="monthSales">₹0</strong></div>
+<div class="stat"><small id="monthCollectionLabel">This month's collection</small><strong id="monthCollection">₹0</strong></div>
+</div>
+<div class="status warn" id="syncStatus">Offline/local mode • Data stays on this device</div>
+<div class="tabs"><button class="active" id="homeTab">Khata</button><button class="soft" id="reportsTab">Reports</button><button class="soft" id="settingsTab">Cloud setup</button></div>
+<div id="homeView">
+<section class="panel"><h2 id="addTitle">Add a customer</h2><form id="customerForm"><label id="nameLabel">Customer name</label><input id="name" required maxlength="60" placeholder="e.g. Rahul Kumar"><label id="phoneLabel">Mobile number (optional)</label><input id="phone" inputmode="tel" maxlength="15" placeholder="10-digit number"><button class="primary" id="saveCustomer">Save customer</button><button type="button" class="soft hidden" id="cancelEdit" style="width:100%;margin-top:7px">Cancel edit</button></form></section>
+<section class="panel"><h2 id="txnTitle">Record a transaction</h2><form id="txnForm"><label id="customerLabel">Customer</label><select id="customerSelect" required><option value="">Choose customer</option></select><div class="row"><div><label id="amountLabel">Amount (₹)</label><input id="amount" type="number" min="1" step=".01" required placeholder="500"></div><div><label id="typeLabel">Transaction type</label><select id="kind"><option value="due">Credit / Given</option><option value="paid">Payment received</option></select></div></div><label id="noteLabel">Note (optional)</label><input id="details" maxlength="100" placeholder="Goods, payment, etc."><button class="primary" id="saveTxn">Save transaction</button></form><p class="note" id="txnHelp">Credit adds to the outstanding balance. Payment received reduces it.</p></section>
+<section class="panel"><h2 id="recentTitle">Recent transactions</h2><div id="recentTransactions" class="small">No transactions yet.</div></section>
+<section class="panel"><h2 id="ledgerTitle">Customer khata</h2><input id="search" placeholder="Search customer..."><div id="customerList"><div class="empty">No customers yet. Add your first customer above.</div></div></section>
+</div>
+<div id="reportsView" class="hidden">
+<section class="panel"><h2 id="reportsTitle">Business reports</h2>
+<div class="row"><div><label id="fromLabel">From</label><input id="reportFrom" type="date"></div><div><label id="toLabel">To</label><input id="reportTo" type="date"></div></div>
+<button class="primary" id="runReport">Generate report</button><div id="reportSummary" style="margin-top:12px"></div>
+<button class="soft" id="printReport" style="width:100%;margin-top:8px">Print / Save as PDF</button></section>
+<section class="panel"><h2 id="customerReportTitle">Customer statement</h2><label id="selectCustomerReport">Select customer</label><select id="reportCustomer"><option value="">Choose customer</option></select><div id="customerStatement" class="small">Choose a customer to view their statement.</div></section>
+<section class="panel"><h2 id="expenseTitle">Record a business expense</h2>
+<form id="expenseForm"><label id="expenseAmountLabel">Expense amount (₹)</label><input id="expenseAmount" type="number" min="0.01" step="0.01" required placeholder="250"><label id="expenseNoteLabel">Expense note</label><input id="expenseNote" maxlength="100" required placeholder="Rent, electricity, transport..."><button class="primary" id="saveExpense">Save expense</button></form>
+<div id="expenseList" class="small"></div><p class="note" id="expenseDisclaimer">Expenses are tracked separately. Collections minus expenses is not accounting profit.</p></section></div>
+<div id="settingsView" class="hidden">
+<section class="panel"><h2>Firebase cloud sync</h2><p class="small">Connect your own free Firebase project to access the same khata on multiple devices. Your Firebase web config is a project identifier, not an admin password. Never share your account password.</p>
+<form id="configForm"><label>Firebase API key</label><input id="apiKey" required placeholder="AIza..."><label>Auth domain</label><input id="authDomain" required placeholder="your-project.firebaseapp.com"><label>Project ID</label><input id="projectId" required placeholder="your-project-id"><label>App ID</label><input id="appId" required placeholder="1:...:web:..."><button class="primary">Save Firebase configuration</button></form>
+<div class="row"><button class="soft" id="connectBtn">Connect / refresh</button><button class="soft" id="logoutBtn">Sign out</button></div>
+<hr style="border:0;border-top:1px solid var(--line);margin:15px 0">
+<h2>Account</h2><form id="authForm"><label>Email</label><input id="email" type="email" required placeholder="you@example.com"><label>Password (minimum 6 characters)</label><input id="password" type="password" required minlength="6" placeholder="Password"><div class="row"><button class="primary" type="button" id="registerBtn">Create account</button><button class="soft" type="button" id="loginBtn">Log in</button></div></form>
+<p class="small">Enable Email/Password sign-in and create a Cloud Firestore database in Firebase Console before connecting. Add the security rules shown below this app's setup instructions.</p>
+</section>
+<section class="panel"><h2>Backup / restore</h2><div class="row"><button class="soft" id="exportBtn">Export backup</button><button class="soft" id="importBtn">Import backup</button></div><input class="hidden" id="importFile" type="file" accept="application/json"><p class="small">Keep a backup file somewhere safe. Import replaces the current local data.</p></section>
+<section class="panel"><h2>Firebase security rules</h2><p class="small">In Firestore → Rules, use this rule so each signed-in user can access only their own record:</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:#f4f7f5;padding:10px;border-radius:9px;font-size:11px">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/appData/{docId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+  }
+}</pre><p class="small">This app is a starter project, not a regulated accounting system. Verify records and keep regular backups.</p></section>
+</div>
+<p class="note">Local mode saves data in this browser on this device. Cloud sync is available only after you configure Firebase and sign in. Internet, Firebase quotas and settings apply.</p>
+<footer class="small" style="text-align:center;padding:12px">Digital Dukaan Hisab • Starter app</footer>
+</main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const KEY='ddh_v2_data', CFG='ddh_v2_firebase';
+let db=load(), editingId=null, app=null, auth=null, store=null, currentUser=null, syncing=false, lang='en';
+const $=id=>document.getElementById(id);
+function load(){try{let x=JSON.parse(localStorage.getItem(KEY))||{customers:[],transactions:[]};if(!Array.isArray(x.expenses))x.expenses=[];return x}catch{return {customers:[],transactions:[],expenses:[]}}}
+function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2})}
+function balance(id){return db.transactions.filter(t=>t.customerId===id).reduce((s,t)=>s+(t.kind==='due'?t.amount:-t.amount),0)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function status(s,type=''){ $('syncStatus').textContent=s;$('syncStatus').className='status '+type}
+async function persist(){localStorage.setItem(KEY,JSON.stringify(db));render();if(currentUser&&!syncing){try{await setDoc(doc(store,'users',currentUser.uid,'appData','main'),db);status('Cloud sync complete • '+currentUser.email,'ok')}catch(e){status('Cloud sync error: '+e.message,'warn')}}}
+function render(){
+ $('totalDue').textContent=money(db.customers.reduce((s,c)=>s+Math.max(0,balance(c.id)),0));$('customerCount').textContent=db.customers.length;
+ const now=new Date(), todayStart=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime(), monthStart=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+ const sum=(items,kind,from)=>items.filter(t=>t.kind===kind&&t.date>=from).reduce((s,t)=>s+Number(t.amount||0),0);
+ $('todaySales').textContent=money(sum(db.transactions,'due',todayStart));
+ $('todayCollection').textContent=money(sum(db.transactions,'paid',todayStart));
+ $('monthSales').textContent=money(sum(db.transactions,'due',monthStart));
+ $('monthCollection').textContent=money(sum(db.transactions,'paid',monthStart));
+ const recent=[...db.transactions].sort((a,b)=>b.date-a.date).slice(0,5);
+ $('recentTransactions').innerHTML=recent.length?recent.map(t=>{const c=db.customers.find(x=>x.id===t.customerId);return `<div style="display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:1px solid var(--line)"><span>${esc(c?c.name:'Deleted customer')}<br><span class="small">${new Date(t.date).toLocaleString('en-IN')} • ${t.kind==='due'?'Credit':'Payment'}</span></span><b class="${t.kind==='due'?'red':'green'}">${t.kind==='due'?'+':'−'}${money(t.amount)}</b></div>`}).join(''):'<div class="empty">No transactions yet.</div>';
+
+ const old=$('customerSelect').value;$('customerSelect').innerHTML='<option value="">Choose customer</option>'+db.customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');if(db.customers.some(c=>c.id===old))$('customerSelect').value=old;
+ const q=$('search').value.toLowerCase().trim(), rows=db.customers.filter(c=>(c.name+' '+(c.phone||'')).toLowerCase().includes(q));
+ $('customerList').innerHTML=rows.length?rows.map(c=>{let b=balance(c.id),tx=db.transactions.filter(t=>t.customerId===c.id).sort((a,b)=>b.date-a.date),last=tx[0];return `<article class="customer"><div class="ctop"><div><div class="cname">${esc(c.name)}</div><div class="small">${esc(c.phone||'No mobile number')}${last?' • '+new Date(last.date).toLocaleDateString('en-IN'):''}</div></div><div class="bal ${b>0?'red':'green'}">${money(b)}</div></div><div class="actions"><button class="soft" data-action="ledger" data-id="${c.id}">View khata</button><button class="soft" data-action="receive" data-id="${c.id}">Receive payment</button><button class="soft" data-action="edit" data-id="${c.id}">Edit</button><button class="soft" data-action="wa" data-id="${c.id}">WhatsApp reminder</button><button class="danger" data-action="delete" data-id="${c.id}">Delete</button></div><div id="ledger-${c.id}"></div></article>`}).join(''):'<div class="empty">No customers found.</div>';
+ const selectedReportCustomer=$('reportCustomer').value;
+ $('reportCustomer').innerHTML='<option value="">Choose customer</option>'+db.customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');
+ if(db.customers.some(c=>c.id===selectedReportCustomer))$('reportCustomer').value=selectedReportCustomer;
+ $('expenseList').innerHTML=db.expenses.length?'<b>Recent expenses</b>'+[...db.expenses].sort((a,b)=>b.date-a.date).slice(0,8).map(x=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(x.note)}<br><span class="small">${new Date(x.date).toLocaleDateString('en-IN')}</span></span><b class="red">${money(x.amount)}</b></div>`).join(''):'No expenses recorded yet.';
+
+}
+$('customerForm').addEventListener('submit',async e=>{e.preventDefault();let name=$('name').value.trim(),phone=$('phone').value.trim();if(!name)return;if(editingId){let c=db.customers.find(x=>x.id===editingId);if(c){c.name=name;c.phone=phone}}else db.customers.push({id:crypto.randomUUID(),name,phone});resetForm();await persist()});
+function resetForm(){editingId=null;$('customerForm').reset();$('addTitle').textContent='Add a customer';$('saveCustomer').textContent='Save customer';$('cancelEdit').classList.add('hidden')}
+$('cancelEdit').onclick=resetForm;
+$('txnForm').addEventListener('submit',async e=>{e.preventDefault();let customerId=$('customerSelect').value,amount=Number($('amount').value);if(!customerId||amount<=0)return;db.transactions.push({id:crypto.randomUUID(),customerId,amount,kind:$('kind').value,details:$('details').value.trim(),date:Date.now()});$('txnForm').reset();await persist()});
+$('customerList').addEventListener('click',async e=>{let b=e.target.closest('button[data-action]');if(!b)return;let id=b.dataset.id,c=db.customers.find(x=>x.id===id);if(!c)return;
+ if(b.dataset.action==='edit'){editingId=id;$('name').value=c.name;$('phone').value=c.phone||'';$('addTitle').textContent='Edit customer';$('saveCustomer').textContent='Update customer';$('cancelEdit').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'})}
+ if(b.dataset.action==='ledger'){let el=$('ledger-'+id);if(el.innerHTML){el.innerHTML='';return}let tx=db.transactions.filter(t=>t.customerId===id).sort((a,b)=>b.date-a.date);el.innerHTML='<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:8px"><b>Transaction history</b>'+(tx.length?tx.map(t=>`<div class="small" style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span>${new Date(t.date).toLocaleDateString('en-IN')} • ${t.kind==='due'?'Credit':'Payment'} ${esc(t.details||'')}</span><b>${t.kind==='due'?'+':'−'}${money(t.amount)}</b></div>`).join(''):'<p class="small">No transactions yet.</p>')+'</div>'}
+ if(b.dataset.action==='receive'){showTab('home');$('customerSelect').value=id;$('kind').value='paid';$('amount').focus();$('txnForm').scrollIntoView({behavior:'smooth',block:'center'});return}
+  if(b.dataset.action==='wa'){if(!c.phone){alert('Add customer mobile number first.');return}let n=c.phone.replace(/\D/g,''),p=n.length===10?'91'+n:n,msg=`Hello ${c.name}, friendly payment reminder: your outstanding balance is ${money(balance(id))}. Thank you.`;window.open('https://wa.me/'+p+'?text='+encodeURIComponent(msg),'_blank')}
+ if(b.dataset.action==='delete'&&confirm('Delete customer and all transactions?')){db.customers=db.customers.filter(x=>x.id!==id);db.transactions=db.transactions.filter(x=>x.customerId!==id);await persist()}
+});
+$('search').oninput=render;
+
+function dateInputStart(v){if(!v)return 0;let p=v.split('-').map(Number);return new Date(p[0],p[1]-1,p[2]).getTime()}
+function dateInputEnd(v){if(!v)return Number.MAX_SAFE_INTEGER;let p=v.split('-').map(Number);return new Date(p[0],p[1]-1,p[2],23,59,59,999).getTime()}
+function generateReport(){
+ const a=dateInputStart($('reportFrom').value),b=dateInputEnd($('reportTo').value);if(b<a){alert('Please check the date range.');return}
+ const tx=db.transactions.filter(t=>t.date>=a&&t.date<=b),ex=db.expenses.filter(x=>x.date>=a&&x.date<=b);
+ const credit=tx.filter(t=>t.kind==='due').reduce((s,t)=>s+Number(t.amount||0),0),paid=tx.filter(t=>t.kind==='paid').reduce((s,t)=>s+Number(t.amount||0),0),cost=ex.reduce((s,x)=>s+Number(x.amount||0),0);
+ $('reportSummary').innerHTML=`<div class="stats"><div class="stat"><small>Credit / उधार</small><strong>${money(credit)}</strong></div><div class="stat"><small>Collections / वसूली</small><strong class="green">${money(paid)}</strong></div><div class="stat"><small>Expenses / खर्च</small><strong class="red">${money(cost)}</strong></div><div class="stat"><small>Collections less expenses</small><strong>${money(paid-cost)}</strong></div></div><p class="small">${tx.length} transactions • ${ex.length} expenses</p>`;
+}
+$('runReport').onclick=generateReport;
+$('printReport').onclick=()=>window.print();
+$('expenseForm').onsubmit=async e=>{e.preventDefault();let amount=Number($('expenseAmount').value),note=$('expenseNote').value.trim();if(amount<=0||!note)return;db.expenses.push({id:crypto.randomUUID(),amount,note,date:Date.now()});$('expenseForm').reset();await persist();generateReport()};
+$('reportCustomer').onchange=()=>{
+ const id=$('reportCustomer').value,c=db.customers.find(x=>x.id===id);if(!c){$('customerStatement').textContent='Choose a customer to view their statement.';return}
+ const tx=db.transactions.filter(t=>t.customerId===id).sort((a,b)=>a.date-b.date);
+ $('customerStatement').innerHTML=`<p><b>${esc(c.name)}</b> • ${esc(c.phone||'No mobile number')}<br>Current balance: <b>${money(balance(id))}</b></p>`+(tx.length?tx.map(t=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span>${new Date(t.date).toLocaleDateString('en-IN')} • ${t.kind==='due'?'Credit':'Payment'} ${esc(t.details||'')}</span><b>${t.kind==='due'?'+':'−'}${money(t.amount)}</b></div>`).join(''):'No transactions for this customer.');
+};
+
+function showTab(which){$('homeView').classList.toggle('hidden',which!=='home');$('reportsView').classList.toggle('hidden',which!=='reports');$('settingsView').classList.toggle('hidden',which!=='settings');$('homeTab').className=which==='home'?'active':'soft';$('reportsTab').className=which==='reports'?'active':'soft';$('settingsTab').className=which==='settings'?'active':'soft'}
+$('homeTab').onclick=()=>showTab('home');$('reportsTab').onclick=()=>showTab('reports');$('settingsTab').onclick=()=>showTab('settings');
+function getCfg(){return {apiKey:$('apiKey').value.trim(),authDomain:$('authDomain').value.trim(),projectId:$('projectId').value.trim(),appId:$('appId').value.trim()}}
+function fillCfg(){try{let c=JSON.parse(localStorage.getItem(CFG)||'null');if(c)for(let k in c)if($(k))$(k).value=c[k]}catch{}}
+$('configForm').onsubmit=e=>{e.preventDefault();let c=getCfg();localStorage.setItem(CFG,JSON.stringify(c));status('Firebase configuration saved on this device. Tap Connect / refresh.','ok')};
+async function connect(){let c=getCfg();if(!c.apiKey||!c.authDomain||!c.projectId||!c.appId){alert('Enter and save all four Firebase config fields first.');return}try{if(!app){app=initializeApp(c);auth=getAuth(app);store=getFirestore(app);onAuthStateChanged(auth,async user=>{currentUser=user;if(user){status('Signed in as '+user.email+' • loading cloud data…');try{let snap=await getDoc(doc(store,'users',user.uid,'appData','main'));if(snap.exists()){syncing=true;db=snap.data();if(!Array.isArray(db.expenses))db.expenses=[];localStorage.setItem(KEY,JSON.stringify(db));syncing=false;render()}else await setDoc(doc(store,'users',user.uid,'appData','main'),db);status('Cloud sync connected • '+user.email,'ok')}catch(e){syncing=false;status('Could not load cloud data: '+e.message,'warn')}}else{status('Firebase ready • sign in to enable cloud sync','ok')}})}else{status('Firebase is already initialized. Sign in or refresh the page if config changed.','ok')}}catch(e){status('Firebase connection error: '+e.message,'warn')}}
+$('connectBtn').onclick=connect;
+$('registerBtn').onclick=async()=>{try{if(!auth)await connect();if(!auth)return;await createUserWithEmailAndPassword(auth,$('email').value.trim(),$('password').value)}catch(e){alert(e.message)}};
+$('loginBtn').onclick=async()=>{try{if(!auth)await connect();if(!auth)return;await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value)}catch(e){alert(e.message)}};
+$('logoutBtn').onclick=async()=>{if(auth)await signOut(auth);currentUser=null;status('Signed out • local data remains on this device')};
+$('exportBtn').onclick=()=>{let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='digital-dukaan-backup.json';a.click();URL.revokeObjectURL(a.href)};
+$('importBtn').onclick=()=>$('importFile').click();
+$('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let x=JSON.parse(await f.text());if(!Array.isArray(x.customers)||!Array.isArray(x.transactions))throw Error('Invalid backup');if(!Array.isArray(x.expenses))x.expenses=[];if(!confirm('Replace current data with this backup?'))return;db=x;await persist();alert('Backup imported.')}catch(err){alert('Could not import: '+err.message)}e.target.value=''};
+const hi={tagline:'आपके व्यवसाय के लिए आसान ग्राहक खाता',dueLabel:'कुल बकाया',countLabel:'ग्राहक',addTitle:'ग्राहक जोड़ें',nameLabel:'ग्राहक का नाम',phoneLabel:'मोबाइल नंबर (वैकल्पिक)',saveCustomer:'ग्राहक सेव करें',txnTitle:'लेन-देन दर्ज करें',customerLabel:'ग्राहक',amountLabel:'राशि (₹)',typeLabel:'लेन-देन का प्रकार',noteLabel:'नोट (वैकल्पिक)',saveTxn:'लेन-देन सेव करें',txnHelp:'उधार जोड़ने से बकाया बढ़ता है। पूरा या आंशिक भुगतान दर्ज करें; भुगतान से बकाया घटता है।',ledgerTitle:'ग्राहक खाता',todaySalesLabel:'आज का उधार',todayCollectionLabel:'आज की वसूली',monthSalesLabel:'इस महीने का उधार',monthCollectionLabel:'इस महीने की वसूली',recentTitle:'हाल के लेन-देन',reportsTitle:'व्यापार रिपोर्ट',fromLabel:'से',toLabel:'तक',runReport:'रिपोर्ट बनाएं',customerReportTitle:'ग्राहक विवरण',selectCustomerReport:'ग्राहक चुनें',expenseTitle:'व्यापार खर्च दर्ज करें',expenseAmountLabel:'खर्च की राशि (₹)',expenseNoteLabel:'खर्च का विवरण',saveExpense:'खर्च सेव करें',printReport:'प्रिंट / PDF सेव करें'};
+let english={tagline:'Simple customer khata for your business',dueLabel:'Total outstanding',countLabel:'Customers',addTitle:'Add a customer',nameLabel:'Customer name',phoneLabel:'Mobile number (optional)',saveCustomer:'Save customer',txnTitle:'Record a transaction',customerLabel:'Customer',amountLabel:'Amount (₹)',typeLabel:'Transaction type',noteLabel:'Note (optional)',saveTxn:'Save transaction',txnHelp:'Credit adds to the outstanding balance. You can record a full or partial payment; payment received reduces the balance.',ledgerTitle:'Customer khata',todaySalesLabel:"Today's credit",todayCollectionLabel:"Today's collection",monthSalesLabel:"This month's credit",monthCollectionLabel:"This month's collection",recentTitle:'Recent transactions',reportsTitle:'Business reports',fromLabel:'From',toLabel:'To',runReport:'Generate report',customerReportTitle:'Customer statement',selectCustomerReport:'Select customer',expenseTitle:'Record a business expense',expenseAmountLabel:'Expense amount (₹)',expenseNoteLabel:'Expense note',saveExpense:'Save expense',printReport:'Print / Save as PDF'};
+$('langBtn').onclick=()=>{lang=lang==='en'?'hi':'en';let t=lang==='hi'?hi:english;for(let k in t)if($(k))$(k).textContent=t[k];$('langBtn').textContent=lang==='hi'?'English':'हिंदी';$('kind').options[0].text=lang==='hi'?'उधार / दिया':'Credit / Given';$('kind').options[1].text=lang==='hi'?'भुगतान मिला':'Payment received'};
+fillCfg();render();$('reportTo').value=new Date().toISOString().slice(0,10);$('reportFrom').value=new Date(new Date().getFullYear(),new Date().getMonth(),1).toISOString().slice(0,10);generateReport();
+</script>
+</body></html>
