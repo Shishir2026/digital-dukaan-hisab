@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#123c32"><title>Digital Dukaan Hisab</title>
+<meta name="theme-color" content="#123c32"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Digital Dukaan"><link rel="icon" type="image/png" sizes="64x64" href="favicon.png"><link rel="apple-touch-icon" href="icon-192.png"><link rel="manifest" href="manifest.json"><title>Digital Dukaan Hisab</title>
 <style>
 :root{--g:#123c32;--bg:#f4f7f5;--line:#e1e9e4;--muted:#68756f;--red:#b42318}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px system-ui,-apple-system,Segoe UI,sans-serif;color:#17231f}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}.brand img{width:48px;height:48px;border-radius:12px;object-fit:cover;flex-shrink:0}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px system-ui,-apple-system,Segoe UI,sans-serif;color:#17231f}
 header{background:var(--g);color:#fff;padding:20px 17px 24px;border-radius:0 0 22px 22px}header h1{font-size:22px;margin:0 0 4px}header p{margin:0;color:#d6e7df;font-size:13px}
 main{max-width:700px;margin:auto;padding:15px}.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 button,input,select{font:inherit}button{border:0;border-radius:10px;padding:11px 13px;font-weight:650;cursor:pointer}.primary{background:var(--g);color:#fff;width:100%}.soft{background:#e9f4ef;color:var(--g)}.danger{background:#fff0ee;color:var(--red)}
@@ -19,7 +19,7 @@ input,select{width:100%;padding:11px;border:1px solid #d6dfda;border-radius:10px
 </style>
 </head>
 <body>
-<header><div class="top"><div><h1>📒 Digital Dukaan Hisab</h1><p id="tagline">Simple customer khata for your business</p></div><button class="soft" id="langBtn">हिंदी</button></div></header>
+<header><div class="top"><div class="brand"><img src="icon-192.png" alt="" width="48" height="48"><div><h1>Digital Dukaan Hisab</h1><p id="tagline">Simple customer khata for your business</p></div><button class="soft" id="langBtn">हिंदी</button></div></header>
 <main>
 <div class="stats">
 <div class="stat"><small id="dueLabel">Total outstanding</small><strong class="red" id="totalDue">₹0</strong></div>
