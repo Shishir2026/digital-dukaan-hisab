@@ -85,7 +85,74 @@ $('homeTab').onclick=()=>showTab('home');$('settingsTab').onclick=()=>showTab('s
 function getCfg(){return {apiKey:$('apiKey').value.trim(),authDomain:$('authDomain').value.trim(),projectId:$('projectId').value.trim(),appId:$('appId').value.trim()}}
 function fillCfg(){try{let c=JSON.parse(localStorage.getItem(CFG)||'null');if(c)for(let k in c)if($(k))$(k).value=c[k]}catch{}}
 $('configForm').onsubmit=e=>{e.preventDefault();let c=getCfg();localStorage.setItem(CFG,JSON.stringify(c));status('Firebase configuration saved on this device. Tap Connect / refresh.','ok')};
-async function connect(){let c=getCfg();if(!c.apiKey||!c.authDomain||!c.projectId||!c.appId){alert('Enter and save all four Firebase config fields first.');return}try{if(!app){app=initializeApp(c);auth=getAuth(app);store=initializeFirestore(app,{experimentalAutoDetectLongPolling:true});onAuthStateChanged(auth,async user=>{currentUser=user;if(user){status('Signed in as '+user.email+' • loading cloud data…');try{let snap=await getDoc(doc(store,'users',user.uid,'appData','main'));if(snap.exists()){syncing=true;db=snap.data();localStorage.setItem(KEY,JSON.stringify(db));syncing=false;render()}else await setDoc(doc(store,'users',user.uid,'appData','main'),db);status('Cloud sync connected • '+user.email,'ok')}catch(e){syncing=false;status('Could not load cloud data: '+e.message,'warn')}}else{status('Firebase ready • sign in to enable cloud sync','ok')}})}else{status('Firebase is already initialized. Sign in or refresh the page if config changed.','ok')}}catch(e){status('Firebase connection error: '+e.message,'warn')}}
+
+async function connect() {
+  const c = getCfg();
+
+  if (!c.apiKey || !c.authDomain || !c.projectId || !c.appId) {
+    alert('Enter and save all four Firebase config fields first.');
+    return;
+  }
+
+  try {
+    if (!app) {
+      app = initializeApp(c);
+      auth = getAuth(app);
+
+      store = initializeFirestore(app, {
+        experimentalAutoDetectLongPolling: true
+      });
+
+      onAuthStateChanged(auth, async (user) => {
+        currentUser = user;
+
+        if (!user) {
+          status('Firebase ready • sign in to enable cloud sync', 'ok');
+          return;
+        }
+
+        status('Signed in as ' + user.email + ' • loading cloud data…');
+
+        try {
+          const mainRef = doc(
+            store,
+            'users',
+            user.uid,
+            'appData',
+            'main'
+          );
+
+          const snap = await getDoc(mainRef);
+
+          if (snap.exists()) {
+            syncing = true;
+            db = snap.data();
+            localStorage.setItem(KEY, JSON.stringify(db));
+            syncing = false;
+            render();
+          } else {
+            await setDoc(mainRef, db);
+          }
+
+          status('Cloud sync connected • ' + user.email, 'ok');
+
+        } catch (e) {
+          syncing = false;
+          console.error('Cloud sync error:', e);
+          status('Could not load cloud data: ' + e.message, 'warn');
+        }
+      });
+
+    } else {
+      status('Firebase is already initialized. Sign in or refresh the page if config changed.', 'ok');
+    }
+
+  } catch (e) {
+    syncing = false;
+    console.error('Firebase connection error:', e);
+    status('Firebase connection error: ' + e.message, 'warn');
+  }
+               }
 $('connectBtn').onclick=connect;
 $('registerBtn').onclick=async()=>{try{if(!auth)await connect();if(!auth)return;await createUserWithEmailAndPassword(auth,$('email').value.trim(),$('password').value)}catch(e){alert(e.message)}};
 $('loginBtn').onclick=async()=>{try{if(!auth)await connect();if(!auth)return;await signInWithEmailAndPassword(auth,$('email').value.trim(),$('password').value)}catch(e){alert(e.message)}};
